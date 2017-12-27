@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		*{padding:0;margin:0;}
+		.dialog{width:500px;height:200px;background:#ccc;position:absolute;text-align:center;}
+		.dialog h2{color:#999;padding:40px 0 60px 0;}
+		.dialog div{width:100%;height:30px;text-align:right;}
+		.dialog b{width:40px;height:40px;position:absolute;top:0;right:0;background:red;color:#fff;line-height:40px;text-align:center;cursor:pointer;}
+		.dialog div span{display:inline-block;width:60px;height:30px;line-height:30px;text-align:center;color:#ff0;background:#999;border-radius:5px;margin-right:3px;cursor:pointer;}
+		.dialog div span:nth-child(2){
+			margin-right:40px;
+		}
+	</style>
+</head>
+<body>
+<button id="btn" info="提交">按钮</button>
+<button id="btn2" info="广告">广告</button>
+	<script>
+		function dialog(obj){
+			this.obj=obj;
+			this.timer=null;
+			this.createDiv();
+		}
+		dialog.prototype.createDiv=function(){
+			var that=this;
+			var divs=document.createElement('div');
+			var h2=document.createElement('h2');
+			var btndiv=document.createElement('div');
+			var close=document.createElement('b');
+			close.innerHTML='&times;';
+			//判断当前对象是否btns属性
+			if(this.obj.hasOwnProperty('btns')){
+				for(var i in this.obj.btns){
+					var span=document.createElement('span');
+					span.innerHTML=this.obj.btns[i];
+					btndiv.appendChild(span);
+				}
+				//确定&取消
+				btndiv.onclick=function(e){
+					var e = e || window.event;
+					var tar = e.target || e.srcElement;
+					switch(tar.innerHTML){
+						case "确定":
+							that.obj.success();
+							that.remove();
+						break;
+						case "取消":
+							that.obj.error();
+							that.remove();
+						break;
+					}
+				}
+			}
+			close.onclick=function(){
+				clearTimeout(that.timer);
+				that.remove();
+			}
+			h2.innerHTML=this.obj.title;
+			divs.appendChild(close);
+			divs.appendChild(h2);
+			divs.appendChild(btndiv);
+			divs.className='dialog';
+			document.body.appendChild(divs);
+			//可视区域的宽高
+			var winw=document.documentElement.clientWidth || document.body.clientWidth;
+			var winh=document.documentElement.clientHeight || document.body.clientHeight;
+			//div的宽高
+			var divw=divs.offsetWidth;
+			var divh=divs.offsetHeight;
+
+			divs.style.left=(winw-divw)/2+'px';
+			divs.style.top=(winh-divh)/2+'px';
+
+		}
+		dialog.prototype.remove=function(){
+			var box=document.getElementsByClassName('dialog')[0];
+			document.body.removeChild(box);
+		}
+		function autoDialog(obj){
+			//借用构造函数
+			dialog.call(this,obj);
+			this.autoClose();
+		}
+		function createO(obj){
+			function fn(){};
+			fn.prototype=obj;
+			return new fn();
+		}
+		//原型式继承
+		autoDialog.prototype=createO(dialog.prototype);
+		//修改原型构造函数
+		autoDialog.prototype.constructor=autoDialog;
+
+		autoDialog.prototype.autoClose=function(){
+			var that=this;
+			this.timer=setTimeout(function(){
+				that.remove();
+			},3000)
+		}
+		//var btn=document.getElementsByTagName('button');
+		document.body.onclick=function(e){
+			var e = e || window.event;
+			var tar = e.target || e.srcElement;
+			if(tar.nodeName=='BUTTON'){
+				switch(tar.getAttribute('info')){
+					case '提交':
+						new dialog({
+							title:'确定要提交吗?',
+							btns:['确定','取消'],
+							close:true,
+							success:function(){
+								alert('提交成功')
+							},
+							error:function(){
+								alert('不提交了！')
+							}
+						})
+					break;
+					case '广告':
+						new autoDialog({
+							title:'这是一个广告',
+							close:true
+						})
+					break;
+					case '拖动':
+						new dragDialog({
+							title:'这是一个广告',
+							close:true
+						})
+					break;
+				}
+			}
+		}
+
+	</script>
+</body>
+</html>
